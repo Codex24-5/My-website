@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CodeX</title><style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--a:#3b82f6;--d:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system}
+body{background:var(--bg);color:var(--text);height:100dvh;display:flex;justify-content:center;overflow:hidden}
+.page{display:none;width:100%;max-width:480px;height:100dvh;flex-direction:column}
+.page.active{display:flex}
+.box{padding:28px;background:var(--card);border-radius:20px;margin:auto;width:92%;max-width:380px;box-shadow:0 10px 40px #0004}
+input,button,select{width:100%;padding:14px;border-radius:12px;border:1px solid #334155;background:var(--bg);color:var(--text);margin:8px 0;font-size:16px}
+button{background:var(--a);border:0;color:#fff;font-weight:600;cursor:pointer;active{transform:scale(.97)}}
+.top{padding:14px 16px;background:var(--card);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155}
+.top b{font-size:18px}
+.users{display:flex;gap:8px;padding:10px 12px;background:var(--card);overflow-x:auto;border-bottom:1px solid #334155}
+.users button{white-space:nowrap;padding:8px 14px;border-radius:20px;background:var(--bg);border:1px solid #334155;font-size:14px}
+.chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:75%;padding:11px 14px;border-radius:18px;word-break:break-word}
+.me{align-self:flex-end;background:var(--a);border-bottom-right-radius:4px}
+.other{align-self:flex-start;background:var(--card);border-bottom-left-radius:4px}
+.input{display:flex;padding:10px 12px;background:var(--card);gap:8px;border-top:1px solid #334155}
+.input input{flex:1;border-radius:22px;margin:0}
+.input button{width:48px;height:48px;border-radius:50%;padding:0;font-size:20px;margin:0}
+.feed{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.post{background:var(--card);padding:14px;border-radius:16px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.head b{color:var(--a);font-size:15px}
+.head span{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.actions button{padding:5px 11px;font-size:13px;border-radius:16px;background:var(--bg);border:1px solid #334155;width:auto}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:99}
+.modal.active{display:flex}
+p{color:var(--muted);font-size:14px}
+@media (max-width:400px){.box{width:94%;padding:22px}}
+</style></head><body>
+
+<div class="page active" id="login"><div class="box"><h2 style="color:var(--a);text-align:center;margin-bottom:16px">Login</h2>
+<input id="lu" placeholder="Username"><input id="lp" type="password" placeholder="Password">
+<button onclick="L()">Login</button><p style="text-align:center;margin-top:12px;cursor:pointer" onclick="P('signup')">Create Account</p></div></div>
+
+<div class="page" id="signup"><div class="box"><h2 style="color:var(--a);text-align:center;margin-bottom:16px">Sign Up</h2>
+<input id="su" placeholder="Username"><input id="sp" type="password" placeholder="Password">
+<button onclick="C()">Create</button><p style="text-align:center;margin-top:12px;cursor:pointer" onclick="P('login')">Back to Login</p></div></div>
+
+<div class="page" id="app"><div class="top"><div onclick="M()" id="m" style="font-size:24px;cursor:pointer">💬</div>
+<b id="t">Messages</b><button style="width:auto;padding:8px 14px;font-size:14px" onclick="O()">Logout</button></div>
+
+<div id="chat" style="flex:1;display:flex;flex-direction:column"><div class="users" id="us"></div>
+<div class="chat" id="ch"></div><div class="input"><input id="mi" placeholder="Message..." onkeydown="if(event.key=='Enter')Snd()"><button onclick="Snd()">➤</button></div></div>
+
+<div id="feed" style="flex:1;display:none;flex-direction:column"><div class="feed" id="fd"></div>
+<div class="input"><input id="pi" placeholder="What's on your mind?" onkeydown="if(event.key=='Enter')Pst()"><button onclick="Pst()">📝</button></div></div></div>
+
+<div class="modal" id="rm"><div class="box"><h3 style="color:var(--d);margin-bottom:12px">Report Post</h3>
+<select id="rr"><option>Spam</option><option>Harassment</option><option>Hate Speech</option><option>Violence</option><option>False Info</option><option>Other</option></select>
+<button onclick="Rpt()">Submit Report</button><button style="background:var(--muted)" onclick="rm.classList.remove('active')">Cancel</button></div></div>
+
+<script>
+let U=JSON.parse(localStorage.U||'[]'),cu=localStorage.cu||'',cw='',md=0,rid=0;
+const P=id=>{document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')};
+function C(){let u=su.value.trim(),p=sp.value.trim();if(!u||!p)return alert('Fill both');if(U.find(x=>x.u==u))return alert('Username taken');U.push({u,p});localStorage.U=JSON.stringify(U);alert('Account created');P('login')}
+function L(){let un=lu.value.trim(),pw=lp.value.trim();if(!U.find(x=>x.u==un&&x.p==pw))return alert('Wrong credentials');cu=un;localStorage.cu=un;I();P('app')}
+function O(){localStorage.removeItem('cu');cu=cw='';P('login')}
+function M(){md=1-md;m.textContent=md?'📰':'💬';t.textContent=md?'News Feed':'Messages';chat.style.display=md?'none':'flex';feed.style.display=md?'flex':'none';if(md)R()}
+function I(){us.innerHTML=U.filter(x=>x.u!=cu).map(x=>`<button onclick="OC('${x.u}')">${x.u}</button>`).join('')||'<span style="color:var(--muted)">No users yet</span>';if(U.length>1&&!cw)OC(U.find(x=>x.u!=cu).u)}
+function OC(x){cw=x;document.querySelectorAll('.users button').forEach(b=>b.style.background=b.textContent==x?'var(--a)':'var(--bg)');V()}
+function Snd(){let tx=mi.value.trim();if(!tx||!cw)return;let k=`c_${cu}_${cw}`,r=`c_${cw}_${cu}`,m=JSON.parse(localStorage[k]||'[]');m.push({f:cu,t:tx,d:Date.now()});localStorage[k]=localStorage[r]=JSON.stringify(m);mi.value='';V()}
+function V(){let k=`c_${cu}_${cw}`,m=JSON.parse(localStorage[k]||'[]');ch.innerHTML=m.map(x=>`<div class="msg ${x.f==cu?'me':'other'}">${x.t}</div>`).join('');ch.scrollTop=ch.scrollHeight}
+function Pst(){let tx=pi.value.trim();if(!tx)return;let ps=JSON.parse(localStorage.P||'[]');ps.unshift({id:Date.now(),u:cu,x:tx,d:Date.now(),r:{},c:[],rp:[]});localStorage.P=JSON.stringify(ps);pi.value='';R()}
+function react(id,e){let ps=JSON.parse(localStorage.P||'[]'),p=ps.find(x=>x.id==id);if(!p.r[e])p.r[e]=[];let i=p.r[e].indexOf(cu);i>-1?p.r[e].splice(i,1):p.r[e].push(cu);localStorage.P=JSON.stringify(ps);R()}
+function addC(id){let inp=document.getElementById('c'+id),tx=inp.value.trim();if(!tx)return;let ps=JSON.parse(localStorage.P||'[]'),p=ps.find(x=>x.id==id);p.c.push({u:cu,t:tx});localStorage.P=JSON.stringify(ps);inp.value='';R()}
+function openR(id){rid=id;rm.classList.add('active')}
+function Rpt(){let ps=JSON.parse(localStorage.P||'[]'),p=ps.find(x=>x.id==rid);if(!p.rp)p.rp=[];if(p.rp.find(r=>r.u==cu))return alert('Already reported');p.rp.push({u:cu,z:rr.value});localStorage.P=JSON.stringify(ps);alert('Reported');rm.classList.remove('active');R()}
+function R(){let ps=JSON.parse(localStorage.P||'[]');fd.innerHTML=ps.map(p=>{let rb=['👍','❤️','😂'].map(e=>`<button onclick="react(${p.id},'${e}')">${e} ${p.r[e]?p.r[e].length:0}</button>`).join('');let cm=p.c.map(c=>`<div style="font-size:13px;margin-top:5px;background:var(--bg);padding:7px 10px;border-radius:10px"><b style="color:var(--a)">${c.u}:</b> ${c.t}</div>`).join('');return `<div class="post"><div class="head"><b>${p.u}</b><div><span>${new Date(p.d).toLocaleTimeString().slice(0,5)}</span>${p.u!=cu?`<button style="background:0;border:0;color:var(--d);cursor:pointer;margin-left:10px;font-size:18px" onclick="openR(${p.id})">🚩${p.rp?p.rp.length:''}</button>`:''}</div></div><div style="margin-bottom:8px;line-height:1.4">${p.x}</div><div class="actions">${rb}</div>${cm}<div style="display:flex;gap:6px;margin-top:8px"><input id="c${p.id}" placeholder="Write a comment..." style="font-size:14px;padding:10px"><button onclick="addC(${p.id})" style="width:auto;padding:10px 14px">Send</button></div></div>`}).join('')||'<div style="text-align:center;color:var(--muted);margin-top:50px">No posts yet</div>'}
+if(cu&&U.find(x=>x.u==cu)){I();P('app')}
+</script></body></html>
